@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
+import api from "../services/api";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
