@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Barbershop {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+
+  subscriptionId     String?
+  subscriptionStatus String?
+  stripeCustomerId   String?
+  currentPeriodEnd   DateTime?
+
+  users        User[]
+  clients      Client[]
+  services     Service[]
+  appointments Appointment[]
+
+  createdAt    DateTime      @default(now())
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+
+  image        String?
+
+  provider     String
+  providerId   String
+
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  // 🔐 ASSINATURA
+  subscriptionStatus   String   @default("inactive") // inactive | active | canceled
+  subscriptionPlan     String?  // monthly | yearly
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+model Client {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String
+  email         String?
+
+  barbershopId  String
+  barbershop    Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  appointments  Appointment[]
+
+  createdAt     DateTime @default(now())
+
+  @@index([barbershopId])
+  @@index([phone])
+}
+
+model Service {
+  id           String     @id @default(uuid())
+  name         String
+  price        Float
+  duration     Int // em minutos
+
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  appointments Appointment[]
+
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId])
+}
+
+model Appointment {
+  id     String   @id @default(uuid())
+  date   DateTime
+  status String   @default("scheduled")
+  price  Float?
+
+  clientId     String
+  serviceId    String
+  barbershopId String
+
+  client     Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  service    Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@index([barbershopId])
+  @@index([date])
+  @@index([status])
+}
+
+model StripeEvent {
+  id        String   @id
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  stripeCustomerId String?
+  stripeSubId      String?  @unique
+  status           String
+  currentPeriodEnd DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
