@@ -1,25 +1,20 @@
 import { useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthSuccess() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
     if (token) {
       localStorage.setItem("token", token);
-
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard");
     } else {
-      navigate("/login", { replace: true });
+      navigate("/login");
     }
-  }, [searchParams, navigate]);
+  }, []);
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-zinc-950 text-white">
-      Entrando...
-    </div>
-  );
+  return <div>Entrando...</div>;
 }
