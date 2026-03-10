@@ -13,13 +13,20 @@ export default function UserMenu() {
         setUser(response.data);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
+
+        // 🔴 se não estiver logado volta para login
+        window.location.href = "/login";
       }
     };
+
     fetchUser();
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("token");
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {}
+
     window.location.href = "/login";
   };
 
@@ -29,7 +36,9 @@ export default function UserMenu() {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -41,18 +50,13 @@ export default function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Botão */}
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-2xl hover:bg-zinc-800 transition-all duration-200"
       >
         {user.image ? (
           <img
-            src={
-              user.image
-                ? `${user.image}?sz=200`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
-            }
+            src={`${user.image}?sz=200`}
             alt="Avatar"
             className="w-9 h-9 rounded-full object-cover border border-zinc-700"
           />
@@ -70,15 +74,12 @@ export default function UserMenu() {
         <span className="text-zinc-500 text-sm">⌄</span>
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 mt-4 w-64 bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-800 overflow-hidden animate-in fade-in zoom-in-95">
+        <div className="absolute right-0 mt-4 w-64 bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-800 overflow-hidden">
           <div className="px-5 py-4 border-b border-zinc-800">
             <p className="font-semibold">{user.name}</p>
             <p className="text-sm text-zinc-400 truncate">{user.email}</p>
           </div>
-
-          <div className="border-t border-zinc-800" />
 
           <button
             onClick={logout}
