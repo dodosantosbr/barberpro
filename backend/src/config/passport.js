@@ -1,21 +1,15 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const prisma = require("./prisma");
-
-// ⚠️ verifica se variáveis existem
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.warn("⚠️ Google OAuth não configurado. Variáveis ausentes.");
-}
+const prisma = require("../config/prisma");
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:
-        process.env.NODE_ENV === "production"
-          ? "https://barberpro-drfa.onrender.com/auth/google/callback"
-          : "http://localhost:3000/auth/google/callback",
+
+      // usa variável de ambiente
+      callbackURL: `${process.env.API_URL}/auth/google/callback`,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
@@ -32,7 +26,6 @@ passport.use(
           where: { email },
         });
 
-        // 🆕 cria usuário se não existir
         if (!user) {
           let barbershop = await prisma.barbershop.findUnique({
             where: { email },
