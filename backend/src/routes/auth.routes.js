@@ -3,6 +3,7 @@ const prisma = require("../config/prisma");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 /* =========================
    CADASTRAR BARBEARIA
@@ -25,7 +26,6 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // cria barbearia
     const barbershop = await prisma.barbershop.create({
       data: {
         name: barbershopName,
@@ -33,7 +33,6 @@ router.post("/register", async (req, res) => {
       },
     });
 
-    // cria usuário dono
     const user = await prisma.user.create({
       data: {
         name,
@@ -138,17 +137,36 @@ router.post("/forgot-password", async (req, res) => {
       where: { id: user.id },
       data: {
         resetToken: token,
-        resetTokenExp: new Date(Date.now() + 3600000), // 1 hora
+        resetTokenExp: new Date(Date.now() + 3600000),
       },
     });
 
-    res.json({
-      message: "Token criado",
-      token,
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Recuperação de senha - BarberPro",
+      html: `
+        <h2>Recuperação de senha</h2>
+        <p>Clique no link abaixo para redefinir sua senha:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>Esse link expira em 1 hora.</p>
+      `,
+    });
+
+    res.json({ message: "Email enviado" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao gerar token" });
+    res.status(500).json({ error: "Erro ao enviar email" });
   }
 });
 
@@ -169,7 +187,7 @@ router.post("/reset-password", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ error: "Token inválido" });
+      return res.status(400).json({ error: "Token inválido ou expirado" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -183,10 +201,10 @@ router.post("/reset-password", async (req, res) => {
       },
     });
 
-    res.json({ message: "Senha alterada" });
+    res.json({ message: "Senha redefinida com sucesso" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro ao alterar senha" });
+    res.status(500).json({ error: "Erro ao redefinir senha" });
   }
 });
 
