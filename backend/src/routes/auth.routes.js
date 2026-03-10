@@ -52,48 +52,26 @@ router.post("/login", async (req, res) => {
 // ===============================
 
 router.get(
-  "/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-  })
-);
-
-router.get(
   "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "https://barberpro-sand.vercel.app/login",
-  }),
+  passport.authenticate("google", { session: false }),
   async (req, res) => {
     try {
-      const user = req.user;
+      if (!req.user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login`);
+      }
 
-      const token = jwt.sign(
-        {
-          id: user.id,
-          barbershopId: user.barbershopId,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+      const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
       });
 
-      const frontendURL =
-        process.env.NODE_ENV === "production"
-          ? "https://barberpro-sand.vercel.app"
-          : "http://localhost:5173";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
-      return res.redirect(`${frontendURL}/dashboard`);
+      console.log("TOKEN GERADO:", token);
+
+      return res.redirect(`${frontendUrl}/auth/success?token=${token}`);
     } catch (error) {
-      console.error(error);
-      return res.redirect("http://localhost:5173/login");
+      console.error("ERRO CALLBACK GOOGLE:", error);
+      return res.redirect(`${process.env.FRONTEND_URL}/login`);
     }
   }
 );
