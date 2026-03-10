@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { AuthContext } from "./context/AuthContext";
 
 import Login from "./pages/Login";
-import AuthSuccess from "./pages/AuthSuccess";
+import Register from "./pages/Register";
 
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
@@ -30,9 +30,9 @@ function App() {
     <Routes>
       {/* rotas públicas */}
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/success" element={<AuthSuccess />} />
+      <Route path="/register" element={<Register />} />
 
-      {/* dashboard SEM sidebar */}
+      {/* dashboard */}
       <Route
         path="/dashboard"
         element={
@@ -55,9 +55,9 @@ function App() {
         <Route path="/agenda" element={<Agenda />} />
       </Route>
 
-      {/* redirecionamento */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
-      <Route path="*" element={<Navigate to="/dashboard" />} />
+      {/* redirect */}
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 }

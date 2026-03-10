@@ -5,6 +5,9 @@ const api = axios.create({
   timeout: 10000,
 });
 
+/* ===============================
+   ENVIA TOKEN AUTOMATICAMENTE
+================================ */
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
@@ -15,6 +18,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/* ===============================
+   TRATAMENTO GLOBAL DE ERROS
+================================ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
