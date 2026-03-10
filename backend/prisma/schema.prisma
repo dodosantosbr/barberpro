@@ -26,28 +26,18 @@ model Barbershop {
 }
 
 model User {
-  id           String     @id @default(uuid())
+  id           String   @id @default(uuid())
   name         String
-  email        String     @unique
+  email        String   @unique
+  password     String?
 
-  password     String?    // 👈 adicionar
-
-  image        String?
-
-  provider     String?    // 👈 tornar opcional
-  providerId   String?    // 👈 tornar opcional
+  resetToken    String?
+  resetTokenExp DateTime?
 
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
 
-  subscriptionStatus   String   @default("inactive")
-  subscriptionPlan     String?
-  stripeCustomerId     String?
-  stripeSubscriptionId String?
-
-  createdAt    DateTime   @default(now())
-
-  @@index([barbershopId])
+  createdAt DateTime @default(now())
 }
 
 model Client {
