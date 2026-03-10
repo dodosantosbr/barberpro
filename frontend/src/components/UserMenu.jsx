@@ -9,16 +9,12 @@ export default function UserMenu() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // espera a API acordar
-        await fetch(import.meta.env.VITE_API_URL);
-
         const response = await api.get("/auth/me");
         setUser(response.data);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
       }
     };
-
     fetchUser();
   }, []);
 
