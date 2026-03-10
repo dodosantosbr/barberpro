@@ -9,21 +9,8 @@ export default function UserMenu() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const response = await fetch(
-          "https://barberpro-drfa.onrender.com/auth/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await response.json();
-        console.log("USER:", data);
-        setUser(data);
+        const response = await api.get("/auth/me");
+        setUser(response.data);
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
       }
