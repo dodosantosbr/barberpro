@@ -17,7 +17,7 @@ passport.use(
       callbackURL:
         process.env.NODE_ENV === "production"
           ? "https://barberpro-production-7d21.up.railway.app/auth/google/callback"
-          : "http://localhost:4000/auth/google/callback",
+          : "http://localhost:3000/auth/google/callback",
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {

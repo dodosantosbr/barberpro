@@ -74,7 +74,12 @@ router.get(
         { expiresIn: "7d" }
       );
 
-      return res.redirect(`http://localhost:5173/auth/success?token=${token}`);
+      const frontendURL =
+        process.env.NODE_ENV === "production"
+          ? "https://barberpro-sand.vercel.app"
+          : "http://localhost:5173";
+
+      return res.redirect(`${frontendURL}/auth/success?token=${token}`);
     } catch (error) {
       console.error(error);
       return res.redirect("http://localhost:5173/login");
