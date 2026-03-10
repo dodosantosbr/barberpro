@@ -12,16 +12,15 @@ export default function AuthSuccess() {
       localStorage.setItem("token", token);
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/dashboard", { replace: true });
       }, 800);
     } else {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   }, [searchParams, navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 text-white">
-      {/* Loader */}
       <div className="relative w-12 h-12">
         <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
       </div>
