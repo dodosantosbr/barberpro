@@ -1,5 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
@@ -9,6 +11,7 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e) {
@@ -22,7 +25,6 @@ export default function Login() {
       });
 
       localStorage.setItem("token", res.data.token);
-
       setUser(res.data.user);
 
       navigate("/dashboard");
@@ -55,6 +57,7 @@ export default function Login() {
 
           {/* Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            {/* Email */}
             <input
               type="email"
               placeholder="Seu email"
@@ -63,14 +66,26 @@ export default function Login() {
               className="bg-white/5 border border-white/10 text-white placeholder-zinc-500 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
 
-            <input
-              type="password"
-              placeholder="Sua senha"
-              required
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/5 border border-white/10 text-white placeholder-zinc-500 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            {/* Senha com olhinho */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Sua senha"
+                required
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 text-white placeholder-zinc-500 p-3 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
 
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            {/* Botão */}
             <button
               disabled={loading}
               className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 rounded-xl transition-all duration-200 shadow-lg"
