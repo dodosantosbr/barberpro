@@ -10,10 +10,8 @@ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID || "missing",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "missing",
-
-      // usa produção ou local automaticamente
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL:
         process.env.NODE_ENV === "production"
           ? "https://barberpro-drfa.onrender.com/auth/google/callback"
@@ -24,17 +22,17 @@ passport.use(
         const email = profile.emails?.[0]?.value?.toLowerCase();
         const name = profile.displayName;
         const providerId = profile.id;
+        const photo = profile.photos?.[0]?.value || null;
 
         if (!email) {
           return done(new Error("Google não retornou email"), null);
         }
 
-        const photo = profile.photos?.[0]?.value || null;
-
         let user = await prisma.user.findUnique({
           where: { email },
         });
 
+        // 🆕 cria usuário se não existir
         if (!user) {
           let barbershop = await prisma.barbershop.findUnique({
             where: { email },
@@ -59,19 +57,15 @@ passport.use(
               barbershopId: barbershop.id,
             },
           });
-        } else if (!user.image && photo) {
-          user = await prisma.user.update({
-            where: { id: user.id },
-            data: { image: photo },
-          });
         }
 
         return done(null, user);
       } catch (error) {
-        console.error("🔥 ERRO GOOGLE DETALHADO:");
-        console.error(error);
+        console.error("🔥 ERRO GOOGLE:", error);
         return done(error, null);
       }
     }
   )
 );
+
+module.exports = passport;

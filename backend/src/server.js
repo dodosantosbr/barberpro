@@ -1,7 +1,9 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const passport = require("passport");
+const cookieParser = require("cookie-parser");
 
 require("./config/passport");
 
@@ -18,6 +20,11 @@ app.use(
 );
 
 // ============================
+// 🍪 Cookies
+// ============================
+app.use(cookieParser());
+
+// ============================
 // 📦 JSON
 // ============================
 app.use(express.json());
@@ -28,7 +35,7 @@ app.use(express.json());
 app.use(passport.initialize());
 
 // ============================
-// 🟢 Health check (Railway)
+// 🟢 Health check
 // ============================
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -70,6 +77,6 @@ app.use((err, req, res, next) => {
 // ============================
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`🚀 API BarberPro rodando na porta ${PORT}`);
 });

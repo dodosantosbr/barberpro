@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 
 // ===============================
-// 🔐 LOGIN SIMPLES (email)
+// 🔐 LOGIN SIMPLES
 // ===============================
 router.post("/login", async (req, res) => {
   try {
@@ -32,10 +32,15 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    return res.json({
-      user,
-      token,
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
+    return res.json({ user });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Erro ao fazer login" });
@@ -43,10 +48,9 @@ router.post("/login", async (req, res) => {
 });
 
 // ===============================
-// 🔵 LOGIN COM GOOGLE
+// 🔵 LOGIN GOOGLE
 // ===============================
 
-// 🔹 Inicia autenticação Google
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -54,12 +58,11 @@ router.get(
   })
 );
 
-// 🔹 Callback do Google
 router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: "http://localhost:5173/login",
+    failureRedirect: "https://barberpro-sand.vercel.app/login",
   }),
   async (req, res) => {
     try {
@@ -74,12 +77,20 @@ router.get(
         { expiresIn: "7d" }
       );
 
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       const frontendURL =
         process.env.NODE_ENV === "production"
           ? "https://barberpro-sand.vercel.app"
           : "http://localhost:5173";
 
-      return res.redirect(`${frontendURL}/auth/success?token=${token}`);
+      return res.redirect(`${frontendURL}/dashboard`);
     } catch (error) {
       console.error(error);
       return res.redirect("http://localhost:5173/login");
@@ -88,7 +99,7 @@ router.get(
 );
 
 // ===============================
-// 👤 DADOS DO USUÁRIO LOGADO
+// 👤 USUÁRIO LOGADO
 // ===============================
 router.get("/me", auth, async (req, res) => {
   try {
@@ -105,6 +116,20 @@ router.get("/me", auth, async (req, res) => {
     console.error(error);
     return res.status(500).json({ error: "Erro ao buscar usuário" });
   }
+});
+
+// ===============================
+// 🚪 LOGOUT
+// ===============================
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+  });
+
+  res.json({ message: "Logout realizado" });
 });
 
 module.exports = router;
