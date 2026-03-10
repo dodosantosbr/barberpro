@@ -12,11 +12,7 @@ const app = express();
 // ============================
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://barberpro-sand.vercel.app",
-      "https://barberpro-git-main-dodosantosbrs-projects.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "https://barberpro-sand.vercel.app"],
     credentials: true,
   })
 );
