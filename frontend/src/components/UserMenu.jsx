@@ -9,6 +9,9 @@ export default function UserMenu() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // espera a API acordar
+        await fetch(import.meta.env.VITE_API_URL);
+
         const response = await api.get("/auth/me");
         setUser(response.data);
       } catch (error) {
@@ -34,7 +37,11 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="w-9 h-9 rounded-full bg-zinc-800 animate-pulse"></div>
+    );
+  }
 
   return (
     <div className="relative" ref={menuRef}>
