@@ -28,8 +28,9 @@ export default function Register() {
       setUser(res.data.user);
 
       navigate("/dashboard");
-    } catch {
-      alert("Erro ao criar conta");
+    } catch (error) {
+      console.log(error.response?.data);
+      alert(error.response?.data?.error || "Erro ao criar conta");
     }
 
     setLoading(false);
