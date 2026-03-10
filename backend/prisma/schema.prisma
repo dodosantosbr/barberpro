@@ -30,25 +30,24 @@ model User {
   name         String
   email        String     @unique
 
+  password     String?    // 👈 adicionar
+
   image        String?
 
-  provider     String
-  providerId   String
+  provider     String?    // 👈 tornar opcional
+  providerId   String?    // 👈 tornar opcional
 
   barbershopId String
   barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
 
-  // 🔐 ASSINATURA
-  subscriptionStatus   String   @default("inactive") // inactive | active | canceled
-  subscriptionPlan     String?  // monthly | yearly
+  subscriptionStatus   String   @default("inactive")
+  subscriptionPlan     String?
   stripeCustomerId     String?
   stripeSubscriptionId String?
 
   createdAt    DateTime   @default(now())
 
   @@index([barbershopId])
-  @@index([stripeCustomerId])
-  @@index([stripeSubscriptionId])
 }
 
 model Client {
