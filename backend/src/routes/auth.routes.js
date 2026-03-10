@@ -3,7 +3,9 @@ const prisma = require("../config/prisma");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* =========================
    CADASTRAR BARBEARIA
@@ -141,23 +143,10 @@ router.post("/forgot-password", async (req, res) => {
       },
     });
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
-
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await resend.emails.send({
+      from: "BarberPro <onboarding@resend.dev>",
       to: email,
       subject: "Recuperação de senha - BarberPro",
       html: `
@@ -170,7 +159,7 @@ router.post("/forgot-password", async (req, res) => {
 
     res.json({ message: "Email enviado" });
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao enviar email:", error);
     res.status(500).json({ error: "Erro ao enviar email" });
   }
 });
