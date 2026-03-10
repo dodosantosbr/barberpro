@@ -12,7 +12,7 @@ export default function UserMenu() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await fetch("http://localhost:4000/auth/me", {
+        const response = await fetch("http://localhost:3000/auth/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
