@@ -55,7 +55,7 @@ export default function UserMenu() {
             src={
               user.image
                 ? `${user.image}?sz=200`
-                : `https://ui-avatars.com/api/?name=${user.name}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
             }
             alt="Avatar"
             className="w-9 h-9 rounded-full object-cover border border-zinc-700"
