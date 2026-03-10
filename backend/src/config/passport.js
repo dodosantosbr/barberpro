@@ -2,12 +2,22 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const prisma = require("./prisma");
 
+// ⚠️ verifica se variáveis existem
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.warn("⚠️ Google OAuth não configurado. Variáveis ausentes.");
+}
+
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:4000/auth/google/callback",
+      clientID: process.env.GOOGLE_CLIENT_ID || "missing",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "missing",
+
+      // usa produção ou local automaticamente
+      callbackURL:
+        process.env.NODE_ENV === "production"
+          ? "https://barberpro-production-7d21.up.railway.app/auth/google/callback"
+          : "http://localhost:4000/auth/google/callback",
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
@@ -19,7 +29,6 @@ passport.use(
           return done(new Error("Google não retornou email"), null);
         }
 
-        // ✅ NÃO ALTERA A URL
         const photo = profile.photos?.[0]?.value || null;
 
         let user = await prisma.user.findUnique({
@@ -27,12 +36,10 @@ passport.use(
         });
 
         if (!user) {
-          // 🔎 Verifica se já existe barbershop com esse email
           let barbershop = await prisma.barbershop.findUnique({
             where: { email },
           });
 
-          // 🆕 Se não existir, cria
           if (!barbershop) {
             barbershop = await prisma.barbershop.create({
               data: {
@@ -61,10 +68,8 @@ passport.use(
 
         return done(null, user);
       } catch (error) {
-        console.error("ERRO GOOGLE DETALHADO:");
+        console.error("🔥 ERRO GOOGLE DETALHADO:");
         console.error(error);
-        console.error(error.message);
-        console.error(error.stack);
         return done(error, null);
       }
     }
