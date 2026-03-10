@@ -16,7 +16,7 @@ passport.use(
       // usa produção ou local automaticamente
       callbackURL:
         process.env.NODE_ENV === "production"
-          ? "https://barberpro-production-7d21.up.railway.app/auth/google/callback"
+          ? "https://barberpro-drfa.onrender.com/auth/google/callback"
           : "http://localhost:3000/auth/google/callback",
     },
     async (_accessToken, _refreshToken, profile, done) => {
