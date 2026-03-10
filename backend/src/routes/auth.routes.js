@@ -51,6 +51,15 @@ router.post("/login", async (req, res) => {
 // 🔵 LOGIN GOOGLE
 // ===============================
 
+// iniciar login
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
+
+// callback google
 router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),
@@ -65,8 +74,6 @@ router.get(
       });
 
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-
-      console.log("TOKEN GERADO:", token);
 
       return res.redirect(`${frontendUrl}/auth/success?token=${token}`);
     } catch (error) {
