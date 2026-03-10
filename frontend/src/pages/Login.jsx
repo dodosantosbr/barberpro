@@ -37,16 +37,13 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0b0f14] relative overflow-hidden">
-      {/* Background glow */}
       <div className="absolute w-[500px] h-[500px] bg-emerald-500/20 blur-[120px] rounded-full -top-32 -left-32" />
       <div className="absolute w-[400px] h-[400px] bg-cyan-500/20 blur-[120px] rounded-full bottom-0 right-0" />
 
-      {/* Card */}
       <div className="relative w-full max-w-md mx-4">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          {/* Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-white">
               Barber<span className="text-emerald-400">Pro</span>
             </h1>
 
@@ -55,53 +52,58 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            {/* Email */}
             <input
               type="email"
               placeholder="Seu email"
               required
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/5 border border-white/10 text-white placeholder-zinc-500 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="bg-white/5 border border-white/10 text-white p-3 rounded-xl"
             />
 
-            {/* Senha com olhinho */}
+            {/* senha com olhinho */}
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Sua senha"
                 required
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 text-white placeholder-zinc-500 p-3 pr-12 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-white/5 border border-white/10 text-white p-3 pr-12 rounded-xl"
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
-            {/* Botão */}
+            {/* recuperar senha */}
+            <div className="text-right">
+              <span
+                onClick={() => navigate("/forgot-password")}
+                className="text-xs text-emerald-400 cursor-pointer hover:underline"
+              >
+                Esqueci minha senha
+              </span>
+            </div>
+
             <button
               disabled={loading}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 rounded-xl transition-all duration-200 shadow-lg"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl"
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-xs text-zinc-500">ou</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          {/* Register */}
           <p className="text-center text-sm text-zinc-400">
             Não tem conta?{" "}
             <span
@@ -112,11 +114,6 @@ export default function Login() {
             </span>
           </p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-zinc-600 text-xs mt-6">
-          © {new Date().getFullYear()} BarberPro
-        </p>
       </div>
     </div>
   );
