@@ -1,43 +1,47 @@
 const express = require("express");
 const router = express.Router();
-const passport = require("passport");
 const jwt = require("jsonwebtoken");
-const prisma = require("../prisma");
-const authMiddleware = require("../middlewares/auth");
+const bcrypt = require("bcrypt"); // Biblioteca para comparar senhas
+const prisma = require("../prisma"); // Assumindo que você usa Prisma para gerenciar o banco de dados
+const authMiddleware = require("../middlewares/auth"); // Middleware para verificar o token JWT
 
-/* LOGIN COM GOOGLE */
-router.get(
-  "/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-  })
-);
+// Rota de Login - Usando e-mail e senha
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-/* CALLBACK GOOGLE */
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { session: false }),
-  async (req, res) => {
-    try {
-      // gera JWT
-      const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-      });
+  try {
+    // Verifica se o usuário existe
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-      // redireciona para frontend com token
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-
-      res.redirect(`${frontendUrl}/auth/success?token=${token}`);
-    } catch (error) {
-      console.error("Erro ao gerar token:", error);
-      res.redirect(`${process.env.FRONTEND_URL}/login`);
+    if (!user) {
+      return res.status(401).json({ message: "Credenciais inválidas" });
     }
-  }
-);
 
-/* USUÁRIO LOGADO */
+    // Verifica se a senha está correta
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Credenciais inválidas" });
+    }
+
+    // Gera o token JWT
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // Retorna o token para o frontend
+    res.json({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro no servidor" });
+  }
+});
+
+// Rota para obter os dados do usuário logado
 router.get("/me", authMiddleware, async (req, res) => {
   try {
+    // Acessa o usuário pelo ID extraído do JWT
     const user = await prisma.user.findUnique({
       where: {
         id: req.user.id,

@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { generateQRCode } = require("../services/qrcodeService"); // Importa o serviço de geração do QR Code
 
+// Função para validar o número de telefone
+const validatePhoneNumber = (phone) => {
+  const phoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/; // Exemplo de formato (XX) XXXXX-XXXX
+  return phoneRegex.test(phone);
+};
+
 // Endpoint para gerar o QR Code
 router.get("/generate-qr", async (req, res) => {
   const { clientPhone } = req.query; // Número do cliente (passado na query)
@@ -9,6 +15,14 @@ router.get("/generate-qr", async (req, res) => {
   // Verificando se o número do cliente foi fornecido
   if (!clientPhone) {
     return res.status(400).json({ message: "Número do cliente é necessário" });
+  }
+
+  // Validando o formato do número de telefone
+  if (!validatePhoneNumber(clientPhone)) {
+    return res.status(400).json({
+      message:
+        "Número de telefone inválido. O formato correto é (XX) XXXXX-XXXX",
+    });
   }
 
   // Pegando as credenciais da Evolution API do arquivo de variáveis de ambiente
@@ -28,7 +42,10 @@ router.get("/generate-qr", async (req, res) => {
     res.json({ qrCodeUrl });
   } catch (error) {
     // Se ocorrer um erro ao gerar o QR Code, envia a mensagem de erro
-    res.status(500).json({ message: error.message });
+    console.error("Erro ao gerar QR Code:", error);
+    res
+      .status(500)
+      .json({ message: "Erro ao gerar QR Code. Tente novamente mais tarde." });
   }
 });
 
