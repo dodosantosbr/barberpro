@@ -64,6 +64,12 @@ app.use("/appointments", auth, require("./routes/appointment.routes"));
 app.use("/dashboard", auth, require("./routes/dashboard.routes"));
 
 // ============================
+// 🟢 Rota para Gerar QR Code
+// ============================
+const qrcodeRoutes = require("./routes/qrcode.routes"); // Rota de QR Code
+app.use("/api", qrcodeRoutes); // Prefixa a rota com "/api"
+
+// ============================
 // 🚨 Erro global
 // ============================
 app.use((err, req, res, next) => {
