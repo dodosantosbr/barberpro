@@ -19,7 +19,7 @@ exports.listAppointments = async (req, res) => {
 
     res.json(appointments);
   } catch (error) {
-    console.error("Erro listAppointments:", error);
+    console.error("Erro listAppointments:", error.message, error.stack);
     res.status(500).json({ error: "Erro ao listar agendamentos" });
   }
 };
@@ -55,10 +55,10 @@ exports.createAppointment = async (req, res) => {
       where: {
         barbershopId,
         status: "scheduled",
-        date: {
-          gte: startDate,
-          lt: endDate,
-        },
+        OR: [
+          { date: { gte: startDate, lt: endDate } },
+          { date: { gte: endDate, lt: startDate } },
+        ],
       },
     });
 
@@ -84,7 +84,14 @@ exports.createAppointment = async (req, res) => {
 
     // ENVIAR WHATSAPP
     if (appointment.client?.phone) {
-      const formattedDate = startDate.toLocaleString("pt-BR");
+      const formattedDate = startDate.toLocaleString("pt-BR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
       const message = `Olá ${appointment.client.name} 👋
 
@@ -100,9 +107,10 @@ Obrigado por agendar com a gente! 💈`;
 
     res.status(201).json(appointment);
   } catch (error) {
-    console.error("Erro createAppointment:", error);
+    console.error("Erro createAppointment:", error.message, error.stack);
     res.status(500).json({
       error: "Erro ao criar agendamento",
+      details: error.message,
     });
   }
 };
@@ -114,7 +122,7 @@ exports.updateAppointment = async (req, res) => {
     const { status, price } = req.body;
 
     const appointment = await prisma.appointment.findUnique({
-      where: { id: Number(id) },
+      where: { id: String(id) }, // Corrigir tipo de ID
       include: {
         client: true,
         service: true,
@@ -128,7 +136,7 @@ exports.updateAppointment = async (req, res) => {
     }
 
     const updated = await prisma.appointment.update({
-      where: { id: Number(id) },
+      where: { id: String(id) },
       data: {
         status,
         price,
@@ -159,7 +167,7 @@ Barbearia PH 💈`;
 
     res.json(updated);
   } catch (error) {
-    console.error("Erro updateAppointment:", error);
+    console.error("Erro updateAppointment:", error.message, error.stack);
     res.status(500).json({
       error: "Erro ao atualizar agendamento",
     });
@@ -181,7 +189,7 @@ exports.deleteAppointment = async (req, res) => {
 
     await prisma.appointment.delete({
       where: {
-        id: id,
+        id: String(id), // Corrigir tipo de ID
       },
     });
 
@@ -189,7 +197,7 @@ exports.deleteAppointment = async (req, res) => {
       message: "Agendamento deletado com sucesso",
     });
   } catch (error) {
-    console.error("Erro deleteAppointment:", error);
+    console.error("Erro deleteAppointment:", error.message, error.stack);
 
     res.status(500).json({
       error: "Erro ao deletar agendamento",
@@ -228,7 +236,7 @@ exports.getTodayRevenue = async (req, res) => {
       count: appointments.length,
     });
   } catch (error) {
-    console.error("Erro getTodayRevenue:", error);
+    console.error("Erro getTodayRevenue:", error.message, error.stack);
     res.status(500).json({
       error: "Erro ao calcular faturamento",
     });
@@ -265,7 +273,7 @@ exports.getTodayAppointments = async (req, res) => {
 
     res.json(appointments);
   } catch (error) {
-    console.error("Erro getTodayAppointments:", error);
+    console.error("Erro getTodayAppointments:", error.message, error.stack);
     res.status(500).json({
       error: "Erro ao buscar agenda",
     });
