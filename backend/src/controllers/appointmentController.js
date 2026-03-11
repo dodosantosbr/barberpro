@@ -1,7 +1,7 @@
 const prisma = require("../config/prisma");
 const { sendWhatsappMessage } = require("../services/whatsapp");
 
-// LISTAR AGENDAMENTOS
+// LISTAR AGENDAMENTOS GERAL
 exports.listAppointments = async (req, res) => {
   try {
     const barbershopId = req.user.barbershopId;
