@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { sendWhatsappMessage } from "../services/whatsappService"; // Importe a função de envio do WhatsApp
 
 export default function Agenda() {
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
@@ -25,6 +26,7 @@ export default function Agenda() {
     fetchServices();
   }, [currentDate]);
 
+  // Função para buscar agendamentos
   async function fetchAppointments() {
     try {
       const res = await api.get("/appointments");
@@ -35,6 +37,7 @@ export default function Agenda() {
     }
   }
 
+  // Função para buscar clientes
   async function fetchClients() {
     try {
       const res = await api.get("/clients");
@@ -45,6 +48,7 @@ export default function Agenda() {
     }
   }
 
+  // Função para buscar serviços
   async function fetchServices() {
     try {
       const res = await api.get("/services");
@@ -55,19 +59,19 @@ export default function Agenda() {
     }
   }
 
+  // Função para mudar o mês no calendário
   function changeMonth(direction) {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + direction);
     setCurrentDate(newDate);
   }
 
+  // Função para pegar os dias do mês
   function getDaysInMonth() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-
     const days = [];
 
     for (let i = 0; i < firstDay.getDay(); i++) {
@@ -76,7 +80,6 @@ export default function Agenda() {
 
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day);
-
       days.push({
         dayNumber: day,
         fullDate: date.toISOString().split("T")[0],
@@ -88,6 +91,7 @@ export default function Agenda() {
 
   const days = getDaysInMonth();
 
+  // Função para salvar um novo agendamento
   async function handleSave() {
     if (!formData.clientId || !formData.serviceId || !formData.time) {
       alert("Preencha todos os campos");
@@ -104,7 +108,6 @@ export default function Agenda() {
     });
 
     setSelectedDate(null);
-
     setFormData({
       clientId: "",
       serviceId: "",
@@ -115,6 +118,32 @@ export default function Agenda() {
     fetchAppointments();
   }
 
+  // Função para enviar lembrete de pagamento
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]; // Data de hoje (YYYY-MM-DD)
+
+    appointments.forEach((appointment) => {
+      const appointmentDate = new Date(appointment.date)
+        .toISOString()
+        .split("T")[0]; // Data do agendamento
+
+      if (appointmentDate === today) {
+        const clientPhone = appointment.client?.phone; // Verificar se o número de telefone está disponível
+        const message = `Olá, ${appointment.client?.name}. Lembrete de pagamento: seu plano vence hoje! Agendamento às ${new Date(
+          appointment.date
+        ).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}.`;
+
+        if (clientPhone) {
+          sendWhatsappMessage(clientPhone, message); // Envia a mensagem
+        }
+      }
+    });
+  }, [appointments]); // Executa toda vez que os agendamentos são alterados
+
+  // Função para deletar um agendamento
   async function deleteAppointment(id) {
     const confirmDelete = window.confirm("Deseja deletar este agendamento?");
     if (!confirmDelete) return;
@@ -134,6 +163,8 @@ export default function Agenda() {
       alert("Erro ao deletar agendamento. Verifique o console.");
     }
   }
+
+  // Função para atualizar o status de um agendamento
   async function updateStatus(status) {
     await api.put(`/appointments/${selectedAppointment.id}`, {
       status,

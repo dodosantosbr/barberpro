@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [monthlyRevenue, setMonthlyRevenue] = useState([]);
   const [newClient, setNewClient] = useState({ name: "", phone: "" });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
 
   const fetchDashboard = async () => {
     try {
@@ -58,9 +59,23 @@ export default function Dashboard() {
     return value;
   };
 
+  // Função para gerar QR Code
+  const fetchQRCode = async () => {
+    const clientPhone = "1234567890"; // Substitua pelo número do cliente
+    try {
+      const response = await api.get(
+        `/api/generate-qr?clientPhone=${clientPhone}`
+      );
+      setQrCodeUrl(response.data.qrCodeUrl); // Salva o QR Code gerado
+    } catch (error) {
+      console.error("Erro ao gerar QR Code:", error);
+    }
+  };
+
   useEffect(() => {
     fetchDashboard();
     fetchMonthlyRevenue();
+    fetchQRCode(); // Chama a função para gerar o QR Code
   }, []);
 
   if (!data) {
@@ -152,6 +167,20 @@ export default function Dashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* QR Code */}
+          <div className="mt-16 p-6 bg-zinc-900 rounded-xl shadow-lg text-center">
+            <h2 className="text-xl font-semibold mb-4">Escaneie o QR Code</h2>
+            {qrCodeUrl ? (
+              <img
+                src={qrCodeUrl}
+                alt="QR Code"
+                className="w-48 h-48 mx-auto"
+              />
+            ) : (
+              <p>Carregando QR Code...</p>
+            )}
           </div>
         </main>
 
