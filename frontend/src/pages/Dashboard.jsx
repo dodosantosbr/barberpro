@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [newClient, setNewClient] = useState({ name: "", phone: "" });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const [clientPhone, setClientPhone] = useState(""); // Inicializando o número de telefone vazio
 
   const fetchDashboard = async () => {
     try {
@@ -60,11 +61,12 @@ export default function Dashboard() {
   };
 
   // Função para gerar QR Code
-  const fetchQRCode = async () => {
-    const clientPhone = "1234567890"; // Substitua pelo número do cliente
+  const fetchQRCode = async (phoneNumber) => {
+    if (!phoneNumber) return;
+
     try {
       const response = await api.get(
-        `/api/generate-qr?clientPhone=${clientPhone}`
+        `/api/generate-qr?clientPhone=${phoneNumber}`
       );
       setQrCodeUrl(response.data.qrCodeUrl); // Salva o QR Code gerado
     } catch (error) {
@@ -75,8 +77,10 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboard();
     fetchMonthlyRevenue();
-    fetchQRCode(); // Chama a função para gerar o QR Code
-  }, []);
+    if (clientPhone) {
+      fetchQRCode(clientPhone); // Chama a função para gerar o QR Code com o número de telefone
+    }
+  }, [clientPhone]); // Monitorando a mudança do número de telefone
 
   if (!data) {
     return (
