@@ -10,7 +10,7 @@ exports.listAppointments = async (req, res) => {
       where: { barbershopId },
       include: {
         client: true,
-        services: true, // Modificado para pegar múltiplos serviços
+        service: true,
       },
       orderBy: {
         date: "asc",
@@ -27,10 +27,10 @@ exports.listAppointments = async (req, res) => {
 // CRIAR AGENDAMENTO
 exports.createAppointment = async (req, res) => {
   try {
-    const { date, clientId, serviceIds } = req.body; // serviceIds agora é um array
+    const { date, clientId, serviceId } = req.body;
     const barbershopId = req.user.barbershopId;
 
-    if (!date || !clientId || !serviceIds || serviceIds.length === 0) {
+    if (!date || !clientId || !serviceId) {
       return res.status(400).json({
         error: "Dados obrigatórios não enviados",
       });
@@ -38,26 +38,17 @@ exports.createAppointment = async (req, res) => {
 
     const startDate = new Date(date);
 
-    // Verificando se todos os serviços existem
-    const services = await prisma.service.findMany({
-      where: {
-        id: {
-          in: serviceIds,
-        },
-      },
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
     });
 
-    if (services.length !== serviceIds.length) {
+    if (!service) {
       return res.status(404).json({
-        error: "Alguns serviços não encontrados",
+        error: "Serviço não encontrado",
       });
     }
 
-    // Calculando o horário de término baseado na duração de todos os serviços
-    let endDate = new Date(startDate.getTime());
-    services.forEach((service) => {
-      endDate.setMinutes(endDate.getMinutes() + service.duration);
-    });
+    const endDate = new Date(startDate.getTime() + service.duration * 60000);
 
     // VERIFICAR CONFLITO DE HORÁRIO
     const conflict = await prisma.appointment.findFirst({
@@ -81,15 +72,13 @@ exports.createAppointment = async (req, res) => {
       data: {
         date: startDate,
         clientId: clientId,
+        serviceId: serviceId,
         barbershopId,
         status: "scheduled",
-        services: {
-          connect: services.map((service) => ({ id: service.id })), // Conectando múltiplos serviços
-        },
       },
       include: {
         client: true,
-        services: true, // Incluindo os serviços no retorno
+        service: true,
       },
     });
 
@@ -99,10 +88,10 @@ exports.createAppointment = async (req, res) => {
 
       const message = `Olá ${appointment.client.name} 👋
 
-Seu horário foi confirmado! 
+Seu horário foi confirmado!
 
 📅 ${formattedDate}
-💈 ${appointment.services.map((s) => s.name).join(", ")}
+💈 ${appointment.service.name}
 
 Obrigado por agendar com a gente! 💈`;
 
@@ -122,46 +111,19 @@ Obrigado por agendar com a gente! 💈`;
 exports.updateAppointment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, price, serviceIds } = req.body; // Adicionando serviceIds na atualização
+    const { status, price } = req.body;
 
     const appointment = await prisma.appointment.findUnique({
       where: { id: Number(id) },
       include: {
         client: true,
-        services: true, // Incluindo os serviços
+        service: true,
       },
     });
 
     if (!appointment) {
       return res.status(404).json({
         error: "Agendamento não encontrado",
-      });
-    }
-
-    // Verificando se os novos serviços existem
-    if (serviceIds && serviceIds.length > 0) {
-      const services = await prisma.service.findMany({
-        where: {
-          id: {
-            in: serviceIds,
-          },
-        },
-      });
-
-      if (services.length !== serviceIds.length) {
-        return res.status(404).json({
-          error: "Alguns serviços não encontrados",
-        });
-      }
-
-      // Atualizando os serviços
-      await prisma.appointment.update({
-        where: { id: Number(id) },
-        data: {
-          services: {
-            set: services.map((service) => ({ id: service.id })), // Atualizando a lista de serviços
-          },
-        },
       });
     }
 
@@ -294,7 +256,7 @@ exports.getTodayAppointments = async (req, res) => {
       },
       include: {
         client: true,
-        services: true, // Incluindo os múltiplos serviços
+        service: true,
       },
       orderBy: {
         date: "asc",

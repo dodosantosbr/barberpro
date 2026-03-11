@@ -14,7 +14,7 @@ export default function Agenda() {
 
   const [formData, setFormData] = useState({
     clientId: "",
-    serviceIds: [], // Alterado para armazenar múltiplos serviços
+    serviceId: "",
     time: "",
     status: "scheduled",
   });
@@ -89,11 +89,7 @@ export default function Agenda() {
   const days = getDaysInMonth();
 
   async function handleSave() {
-    if (
-      !formData.clientId ||
-      formData.serviceIds.length === 0 ||
-      !formData.time
-    ) {
+    if (!formData.clientId || !formData.serviceId || !formData.time) {
       alert("Preencha todos os campos");
       return;
     }
@@ -103,7 +99,7 @@ export default function Agenda() {
     await api.post("/appointments", {
       date: dateTime,
       clientId: formData.clientId,
-      serviceIds: formData.serviceIds, // Enviando múltiplos serviços
+      serviceId: formData.serviceId,
       status: formData.status,
     });
 
@@ -111,7 +107,7 @@ export default function Agenda() {
 
     setFormData({
       clientId: "",
-      serviceIds: [], // Limpar a lista de serviços após o envio
+      serviceId: "",
       time: "",
       status: "scheduled",
     });
@@ -138,7 +134,6 @@ export default function Agenda() {
       alert("Erro ao deletar agendamento. Verifique o console.");
     }
   }
-
   async function updateStatus(status) {
     await api.put(`/appointments/${selectedAppointment.id}`, {
       status,
@@ -274,15 +269,11 @@ export default function Agenda() {
             </select>
 
             <select
-              multiple
-              value={formData.serviceIds}
+              value={formData.serviceId}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  serviceIds: Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  ),
+                  serviceId: e.target.value,
                 })
               }
               className="w-full mb-3 p-2 rounded bg-zinc-800"
@@ -323,15 +314,7 @@ export default function Agenda() {
 
             <p className="mb-2">Cliente: {selectedAppointment.client?.name}</p>
 
-            <p className="mb-4">
-              Serviço(s):
-              {selectedAppointment.serviceIds
-                ?.map((serviceId) => {
-                  const service = services.find((s) => s.id === serviceId);
-                  return service ? service.name : "";
-                })
-                .join(", ")}
-            </p>
+            <p className="mb-4">Serviço: {selectedAppointment.service?.name}</p>
 
             <div className="flex flex-col gap-2">
               <button
