@@ -24,7 +24,7 @@ exports.listAppointments = async (req, res) => {
   }
 };
 
-// CRIAR AGENDAMENTO
+// CRIAR AGENDAMENTO (GERA UM NOVO AGENDAMENTO)
 exports.createAppointment = async (req, res) => {
   try {
     const { date, clientId, serviceId } = req.body;
