@@ -99,7 +99,7 @@ exports.createAppointment = async (req, res) => {
 
       const message = `Olá ${appointment.client.name} 👋
 
-Seu horário foi confirmado!
+Seu horário foi confirmado! 
 
 📅 ${formattedDate}
 💈 ${appointment.services.map((s) => s.name).join(", ")}
@@ -158,7 +158,7 @@ exports.updateAppointment = async (req, res) => {
       await prisma.appointment.update({
         where: { id: Number(id) },
         data: {
-          serviceIds: {
+          services: {
             set: services.map((service) => ({ id: service.id })), // Atualizando a lista de serviços
           },
         },
