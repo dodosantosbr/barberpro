@@ -10,7 +10,7 @@ exports.listAppointments = async (req, res) => {
       where: { barbershopId },
       include: {
         client: true,
-        service: true,
+        services: true, // Modificado para pegar múltiplos serviços
       },
       orderBy: {
         date: "asc",
@@ -27,10 +27,10 @@ exports.listAppointments = async (req, res) => {
 // CRIAR AGENDAMENTO
 exports.createAppointment = async (req, res) => {
   try {
-    const { date, clientId, serviceId } = req.body;
+    const { date, clientId, serviceIds } = req.body; // serviceIds agora é um array
     const barbershopId = req.user.barbershopId;
 
-    if (!date || !clientId || !serviceId) {
+    if (!date || !clientId || !serviceIds || serviceIds.length === 0) {
       return res.status(400).json({
         error: "Dados obrigatórios não enviados",
       });
@@ -38,17 +38,26 @@ exports.createAppointment = async (req, res) => {
 
     const startDate = new Date(date);
 
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
+    // Verificando se todos os serviços existem
+    const services = await prisma.service.findMany({
+      where: {
+        id: {
+          in: serviceIds,
+        },
+      },
     });
 
-    if (!service) {
+    if (services.length !== serviceIds.length) {
       return res.status(404).json({
-        error: "Serviço não encontrado",
+        error: "Alguns serviços não encontrados",
       });
     }
 
-    const endDate = new Date(startDate.getTime() + service.duration * 60000);
+    // Calculando o horário de término baseado na duração de todos os serviços
+    let endDate = new Date(startDate.getTime());
+    services.forEach((service) => {
+      endDate.setMinutes(endDate.getMinutes() + service.duration);
+    });
 
     // VERIFICAR CONFLITO DE HORÁRIO
     const conflict = await prisma.appointment.findFirst({
@@ -72,13 +81,15 @@ exports.createAppointment = async (req, res) => {
       data: {
         date: startDate,
         clientId: clientId,
-        serviceId: serviceId,
         barbershopId,
         status: "scheduled",
+        services: {
+          connect: services.map((service) => ({ id: service.id })), // Conectando múltiplos serviços
+        },
       },
       include: {
         client: true,
-        service: true,
+        services: true, // Incluindo os serviços no retorno
       },
     });
 
@@ -91,7 +102,7 @@ exports.createAppointment = async (req, res) => {
 Seu horário foi confirmado!
 
 📅 ${formattedDate}
-💈 ${appointment.service.name}
+💈 ${appointment.services.map((s) => s.name).join(", ")}
 
 Obrigado por agendar com a gente! 💈`;
 
@@ -111,19 +122,46 @@ Obrigado por agendar com a gente! 💈`;
 exports.updateAppointment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, price } = req.body;
+    const { status, price, serviceIds } = req.body; // Adicionando serviceIds na atualização
 
     const appointment = await prisma.appointment.findUnique({
       where: { id: Number(id) },
       include: {
         client: true,
-        service: true,
+        services: true, // Incluindo os serviços
       },
     });
 
     if (!appointment) {
       return res.status(404).json({
         error: "Agendamento não encontrado",
+      });
+    }
+
+    // Verificando se os novos serviços existem
+    if (serviceIds && serviceIds.length > 0) {
+      const services = await prisma.service.findMany({
+        where: {
+          id: {
+            in: serviceIds,
+          },
+        },
+      });
+
+      if (services.length !== serviceIds.length) {
+        return res.status(404).json({
+          error: "Alguns serviços não encontrados",
+        });
+      }
+
+      // Atualizando os serviços
+      await prisma.appointment.update({
+        where: { id: Number(id) },
+        data: {
+          serviceIds: {
+            set: services.map((service) => ({ id: service.id })), // Atualizando a lista de serviços
+          },
+        },
       });
     }
 
@@ -256,7 +294,7 @@ exports.getTodayAppointments = async (req, res) => {
       },
       include: {
         client: true,
-        service: true,
+        services: true, // Incluindo os múltiplos serviços
       },
       orderBy: {
         date: "asc",
